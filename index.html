@@ -798,35 +798,7 @@ footer{border-top:1px solid var(--line);padding:clamp(48px,6vw,74px) 0 34px;marg
 
       <form id="form" novalidate>
         <div class="notice" id="cfgWarn" style="display:none"></div>
-        <div class="grid2">
-          <div class="f"><label for="ad">Ad Soyad <i>*</i></label><input id="ad" name="ad" autocomplete="name" placeholder="Adın ve soyadın"><div class="err">Bu alan zorunlu.</div></div>
-          <div class="f"><label for="eposta">E-posta <i>*</i></label><input id="eposta" name="eposta" type="email" autocomplete="email" placeholder="ornek@ogrenci.ogu.edu.tr"><div class="err">Geçerli bir e-posta gir.</div></div>
-        </div>
-        <div class="grid2">
-          <div class="f"><label for="telefon">Telefon <i>*</i></label><input id="telefon" name="telefon" type="tel" autocomplete="tel" inputmode="tel" placeholder="05XX XXX XX XX"><div class="err">Geçerli bir telefon numarası gir.</div></div>
-          <div class="f"><label for="bolum">Bölüm <i>*</i></label><input id="bolum" name="bolum" placeholder="Örn. Makine Mühendisliği"><div class="err">Bu alan zorunlu.</div></div>
-        </div>
-        <div class="grid2">
-          <div class="f"><label for="sinif">Sınıf <i>*</i></label>
-            <select id="sinif" name="sinif">
-              <option value="">Seç</option><option>Hazırlık</option><option>1. sınıf</option><option>2. sınıf</option><option>3. sınıf</option><option>4. sınıf</option><option>Yüksek lisans / doktora</option>
-            </select><div class="err">Bu alan zorunlu.</div></div>
-          <div class="f"><label for="saat">Haftada kaç saat ayırabilirsin? <i>*</i></label>
-            <select id="saat" name="saat">
-              <option value="">Seç</option><option>0-5 saat</option><option>5-10 saat</option><option>10-15 saat</option><option>15-20 saat</option><option>20+ saat</option>
-            </select><div class="err">Bu alan zorunlu.</div></div>
-        </div>
-        <div class="f"><label for="kendin">Kendinden kısaca bahseder misin? <i>*</i></label>
-          <textarea id="kendin" name="kendin" placeholder="İlgi alanların, şu ana kadar yaptığın çalışmalar, nelerde iyi olduğunu düşünüyorsun…"></textarea>
-          <div class="err">Bu alan zorunlu.</div></div>
-        <div class="f"><label for="neden">Neden bu birimde yer almak istiyorsun? <i>*</i></label>
-          <textarea id="neden" name="neden" placeholder="Bu birimi tercih etme sebebin"></textarea>
-          <div class="err">Bu alan zorunlu.</div></div>
-        <div class="f" id="extraWrap"><label for="ekstra" id="extraLabel">Ek soru</label>
-          <textarea id="ekstra" name="ekstra"></textarea>
-          <div class="hint" id="extraHint"></div></div>
-        <div class="f"><label for="deneyim">Daha önce kulüp, takım veya proje deneyimin oldu mu?</label>
-          <textarea id="deneyim" name="deneyim" style="min-height:82px" placeholder="Opsiyonel"></textarea></div>
+        <div id="fields"></div>
         <div class="formfoot">
           <button class="btn btn-p" type="submit" id="send">Başvuruyu Gönder
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
@@ -938,13 +910,35 @@ const BAGLANTILAR = {
   linkedin : 'https://www.linkedin.com/company/esogumpgk/'
 };
 
+/* Başvuru formunun alanları. Bir birim kendi "sorular" listesini
+   tanımlamazsa aşağıdaki varsayılan set kullanılır.
+   t: text | email | tel | select | textarea  ·  req: zorunlu  ·  yari: yarım genişlik
+   l: '@ekSoru' yazarsan o birimin ekSoru metni etiket olur. */
+const SORULAR = [
+  {k:'ad',      l:'Ad Soyad',   t:'text',  req:1, yari:1, ph:'Adın ve soyadın', ac:'name'},
+  {k:'eposta',  l:'E-posta',    t:'email', req:1, yari:1, ph:'ornek@ogrenci.ogu.edu.tr', ac:'email'},
+  {k:'telefon', l:'Telefon',    t:'tel',   req:1, yari:1, ph:'05XX XXX XX XX', ac:'tel'},
+  {k:'bolum',   l:'Bölümün',    t:'text',  req:1, yari:1, ph:'Örn. Makine Mühendisliği'},
+  {k:'sinif',   l:'Sınıfın',    t:'select',req:1, yari:1,
+   sec:['Hazırlık','1. sınıf','2. sınıf','3. sınıf','4. sınıf','Yüksek lisans / doktora']},
+  {k:'saat',    l:'Haftada kaç saat ayırabilirsin?', t:'select', req:1, yari:1,
+   sec:['0-5 saat','5-10 saat','10-15 saat','15-20 saat','20+ saat']},
+  {k:'kendin',  l:'Kendinden kısaca bahseder misin?', t:'textarea', req:1,
+   ph:'İlgi alanların, şu ana kadar yaptığın çalışmalar, nelerde iyi olduğunu düşünüyorsun…'},
+  {k:'neden',   l:'Neden bu birimde yer almak istiyorsun?', t:'textarea', req:1,
+   ph:'Bu birimi tercih etme sebebin'},
+  {k:'ekstra',  l:'@ekSoru', t:'textarea'},
+  {k:'deneyim', l:'Daha önce kulüp, takım veya proje deneyimin oldu mu?', t:'textarea',
+   ph:'Opsiyonel', kisa:1}
+];
+
 const BIRIMLER = [
   {
     id: 'organizasyon',
     ad: 'Organizasyon Birimi',
     kisa: 'Zirve, eğitim ve etkinliklerin fikirden bitişe kadar planlanması.',
     aciklama: 'Okul çapında düzenlediğimiz tüm zirve, eğitim ve etkinliklerin fikir aşamasından bitimine kadar olan süreçlerini uçtan uca planlayan birimimizdir. Etkinliklerin takvim yönetimi, mekân koordinasyonu, saha operasyonlarının kusursuz yürütülmesi ve süreç esnasında anlık kriz yönetiminin sağlanmasından sorumludur. Katılımcı deneyimini en üst düzeye çıkarmak amacıyla diğer tüm birimlerle koordineli bir şekilde çalışarak organizasyonların genel işleyişini denetler.',
-    acik: false,
+    acik: true,
     ekSoru: 'Daha önce etkinlik organizasyonunda yer aldın mı?',
     ekIpucu: 'Okul, kulüp veya gönüllü organizasyon deneyimlerini yazabilirsin.',
     formId: '1FAIpQLSfGPOBnr25HMtEiMJqw1Uq4fOgRG-bs77Ls4K2EyeBFu60hjQ',
@@ -970,17 +964,33 @@ const BIRIMLER = [
     ekSoru: 'Sunum, kurumsal yazışma veya görüşme deneyimin oldu mu?',
     ekIpucu: 'Daha önce sponsorluk dosyası hazırladıysan ya da bir kurumla görüşme yürüttüysen kısaca yazabilirsin.',
     formId: '1FAIpQLSdENEREIwPnrzIAn0PBCMG-Q_MUCXpeje_1tBhv-730nGvl9w',
+    // Birim sorumlusunun istediği soru seti — varsayılandan farklı.
+    sorular: [
+      {k:'ad',      l:'Ad Soyad',      t:'text',  req:1, yari:1, ph:'Adın ve soyadın', ac:'name'},
+      {k:'eposta',  l:'E-posta',       t:'email', req:1, yari:1, ph:'ornek@ogrenci.ogu.edu.tr', ac:'email'},
+      {k:'telefon', l:'Telefon numaran', t:'tel', req:1, yari:1, ph:'05XX XXX XX XX', ac:'tel'},
+      {k:'bolum',   l:'Bölümün',       t:'text',  req:1, yari:1, ph:'Örn. Makine Mühendisliği'},
+      {k:'sinif',   l:'Sınıfın',       t:'select',req:1, yari:1,
+       sec:['Hazırlık','1. sınıf','2. sınıf','3. sınıf','4. sınıf']},
+      {k:'roket',   l:'Roket takımımızın sponsorluk süreçlerinde de görev almak ister misin?',
+       t:'select', req:1, yari:1, sec:['Evet','Hayır']},
+      {k:'neden',   l:'Neden Kurumsal İletişim ve Sponsorluk Birimi\u2019nde yer almak istiyorsun?',
+       t:'textarea', req:1, ph:'Bu birimi tercih etme sebebin'},
+      {k:'kendin',  l:'Kısaca kendinden bahseder misin?', t:'textarea', req:1,
+       ph:'İlgi alanların, şu ana kadar yaptığın çalışmalar, nelerde iyi olduğunu düşünüyorsun…'},
+      {k:'deneyim', l:'Daha önce lisede veya üniversitede kurumsal iletişim ya da sponsorluk bulma süreçlerinde yer aldın mı?',
+       t:'textarea', ph:'Opsiyonel — yer aldıysan kısaca anlatabilirsin'}
+    ],
     alanlar: {
-      ad: 'entry.1853677480',
-      eposta: 'entry.1633417036',
-      telefon: 'entry.2001685652',
-      bolum: 'entry.195936063',
-      sinif: 'entry.2047562633',
-      saat: 'entry.1058504532',
-      kendin: 'entry.221034014',
-      neden: 'entry.590755556',
-      ekstra: 'entry.1557733165',
-      deneyim: 'entry.656593811'
+      ad: 'entry.2049397983',
+      eposta: 'entry.114635839',
+      telefon: 'entry.1449242222',
+      bolum: 'entry.190385611',
+      sinif: 'entry.2004014766',
+      neden: 'entry.1769308454',
+      roket: 'entry.1297670031',
+      kendin: 'entry.994614498',
+      deneyim: 'entry.574606012'
     }
   },
   {
@@ -1353,9 +1363,7 @@ function seç(id){
   const b = BIRIMLER.find(x=> x.id === id); if(!b || !b.acik) return;
   secili = b;
   $$('.chip').forEach(c=> c.classList.toggle('on', c.dataset.id === id));
-  $('#extraLabel').textContent = b.ekSoru;
-  $('#extraHint').textContent = b.ekIpucu || '';
-  $('#extraWrap').style.display = b.ekSoru ? '' : 'none';
+  alanlariCiz(b);
   cfgWarn.style.display = b.formId ? 'none' : '';
   cfgWarn.innerHTML = 'Bu birimin Google Form bağlantısı henüz siteye eklenmedi. '
     + '<b>BIRIMLER</b> ayarındaki <b>formId</b> ve <b>alanlar</b> değerlerini doldurunca gönderim aktif olur.';
@@ -1373,29 +1381,70 @@ if(!acikBirimler.length){
     '<div class="notice" style="margin-top:22px">Şu anda açık üye alımı bulunmuyor. Yeni dönem başvuruları açıldığında bu sayfadan ve Instagram hesabımızdan duyurulacak.</div>');
 }
 
+/* ---------- başvuru: alanları çiz ---------- */
+function birimSorulari(b){
+  if(!b) return [];
+  return (b.sorular || SORULAR)
+    .map(q => q.l === '@ekSoru' ? Object.assign({}, q, {l:b.ekSoru, ip:b.ekIpucu}) : q)
+    .filter(q => q.l);
+}
+function alanHtml(q){
+  var giris;
+  if(q.t === 'select'){
+    giris = '<select id="'+q.k+'" name="'+q.k+'"><option value="">Seç</option>'
+          + q.sec.map(function(o){ return '<option>'+o+'</option>'; }).join('') + '</select>';
+  } else if(q.t === 'textarea'){
+    giris = '<textarea id="'+q.k+'" name="'+q.k+'"'
+          + (q.kisa ? ' style="min-height:82px"' : '')
+          + (q.ph ? ' placeholder="'+q.ph+'"' : '') + '></textarea>';
+  } else {
+    giris = '<input id="'+q.k+'" name="'+q.k+'" type="'+q.t+'"'
+          + (q.ac ? ' autocomplete="'+q.ac+'"' : '')
+          + (q.t === 'tel' ? ' inputmode="tel"' : '')
+          + (q.ph ? ' placeholder="'+q.ph+'"' : '') + '>';
+  }
+  var hata = q.t === 'email' ? 'Geçerli bir e-posta gir.'
+           : q.t === 'tel'   ? 'Geçerli bir telefon numarası gir.'
+           : 'Bu alan zorunlu.';
+  return '<div class="f"><label for="'+q.k+'">'+q.l+(q.req ? ' <i>*</i>' : '')+'</label>' + giris
+       + (q.req ? '<div class="err">'+hata+'</div>' : '')
+       + (q.ip ? '<div class="hint">'+q.ip+'</div>' : '') + '</div>';
+}
+function alanlariCiz(b){
+  var qs = birimSorulari(b), parca = [];
+  for(var i = 0; i < qs.length; i++){
+    if(qs[i].yari && qs[i+1] && qs[i+1].yari){
+      parca.push('<div class="grid2">' + alanHtml(qs[i]) + alanHtml(qs[i+1]) + '</div>');
+      i++;
+    } else parca.push(alanHtml(qs[i]));
+  }
+  $('#fields').innerHTML = parca.join('');
+  $$('#fields input, #fields select, #fields textarea').forEach(function(i){
+    i.addEventListener('input', function(){ i.closest('.f').classList.remove('bad'); });
+  });
+}
+
 /* ---------- başvuru: doğrulama + gönderim ---------- */
-const ZORUNLU = ['ad','eposta','telefon','bolum','sinif','saat','kendin','neden'];
-const val = id => ($('#'+id).value || '').trim();
+const val = id => { const e = $('#'+id); return e ? (e.value || '').trim() : ''; };
 function kontrol(){
   let ok = true;
-  ZORUNLU.forEach(id=>{
-    const f = $('#'+id).closest('.f');
-    let bad = !val(id);
-    if(id === 'eposta' && !bad) bad = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val(id));
-    if(id === 'telefon' && !bad) bad = (val(id).replace(/\D/g,'').length < 10);
+  birimSorulari(secili).forEach(q=>{
+    if(!q.req) return;
+    const el = $('#'+q.k); if(!el) return;
+    const f = el.closest('.f');
+    let bad = !val(q.k);
+    if(q.t === 'email' && !bad) bad = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val(q.k));
+    if(q.t === 'tel'   && !bad) bad = (val(q.k).replace(/\D/g,'').length < 10);
     f.classList.toggle('bad', bad);
-    if(bad && ok){ f.scrollIntoView({behavior: RM?'auto':'smooth', block:'center'}); $('#'+id).focus({preventScroll:true}); }
+    if(bad && ok){ f.scrollIntoView({behavior: RM?'auto':'smooth', block:'center'}); el.focus({preventScroll:true}); }
     if(bad) ok = false;
   });
   return ok;
 }
-$$('#form input, #form select, #form textarea').forEach(i=>
-  i.addEventListener('input', ()=> i.closest('.f').classList.remove('bad')));
-
 function veri(){
-  return { ad:val('ad'), eposta:val('eposta'), telefon:val('telefon'), bolum:val('bolum'),
-           sinif:val('sinif'), saat:val('saat'), kendin:val('kendin'), neden:val('neden'),
-           ekstra:val('ekstra'), deneyim:val('deneyim'), birim:secili ? secili.ad : '' };
+  const d = { birim: secili ? secili.ad : '' };
+  birimSorulari(secili).forEach(q=>{ d[q.k] = val(q.k); });
+  return d;
 }
 function prefillUrl(b, d){
   const p = new URLSearchParams({usp:'pp_url'});
